@@ -131,16 +131,6 @@ def read_a_bed_file(fname, ht_exons):
     return _ga, reads_by_gene, counts
 
 
-def dir_creation(lib):
-    dir_list = ['bedgraphs/', 'bed_uncollapsed/' 'bed_collapsed/',
-                'figs/', 'logs/']
-    for adir in dir_list:
-        if not os.path.exists(lib['top'] + '/' + adir):
-            os.system('mkdir ' + lib['top'] + '/' + adir)
-        if not os.path.exists(lib['clusters_dir']):
-            os.system('mkdir ' + lib['clusters_dir'])
-
-
 if __name__ == '__main__':
     args = read_args()
     print args
@@ -148,7 +138,9 @@ if __name__ == '__main__':
     import config
     lib = config.config()
     del sys.path[0]
-    dir_creation(lib)
+    # dir_creation(lib)
+    if not os.path.exists('logs/'): os.system('mkdir logs')
+    if not os.path.exists('figs/'): os.system('mkdir figs')
     logging.basicConfig(
         filename='logs/%s_find_peaks_by_perm.log' % datetime.datetime.now().strftime('%Hh%Mm'),
         level=logging.DEBUG)
