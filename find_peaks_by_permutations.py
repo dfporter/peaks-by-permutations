@@ -7,16 +7,19 @@ Rank by p value for the shuffle.
 
 Apply a BH FDR.
 
+Compare replicates and output peaks.
+
 INPUT:
 Config file.
 
 OUTPUT:
 Outputs to lib['clusters_dir'] from the config.ini file.
+Outputs called peaks to lib['permutation_peaks'].
 
 Run as;
-python find_peaks_by_permutations.py -c <directory with config.py> --use lib
+python find_peaks_by_permutations.py -c <directory with config.py>
 
-From config.ini, this uses:
+From config.ini, this uses the following variables:
 lib[control_bed1]...
 lib[expt_bed1]...
 lib['gtf_raw']
@@ -24,27 +27,9 @@ lib['read_beds']
 lib['gtf_with_names']
 exp_bedgraph_minus
 exp_bedgraph_plus
-
-cluster_tables_to_peak_files:
-gtf_with_names
-gtf_raw
 clusters_dir
 permutation_peaks_dir
 
-subpeaks_ui.py
-lib['coverage_wigs.]
-exp_bedgraph_minus
-exp_bedgraph_plus
-lib['chr_sizes']
-
-gtf_pickle
-feat_loc_dir
-gtf_one_txpt_per_gene
-exp_bedgraph_minus
-exp_bedgraph_plus
-coverage_wigs = bedgraphs_folder
-txpt_obj_path
-bedgraphs_folder
 """
 
 import HTSeq
@@ -62,7 +47,7 @@ import re
 
 import cluster_reads
 import p_values_of_clusters
-
+import cluster_combine
 
 def read_args():
     parser = argparse.ArgumentParser(description='''
@@ -107,7 +92,7 @@ def read_a_bed_file(fname, ht_exons):
     _ga = HTSeq.GenomicArray('auto', stranded=True)
     if not os.path.exists(fname):
         print "bed file not found: {o}".format(o=fname)
-        return counts, reads_by_gene
+        return _ga, counts, reads_by_gene
     for n, line in enumerate(open(fname)):
         # if n > 1e6: break
         if not n % 1e6:
@@ -138,7 +123,6 @@ if __name__ == '__main__':
     import config
     lib = config.config()
     del sys.path[0]
-    # dir_creation(lib)
     if not os.path.exists('logs/'): os.system('mkdir logs')
     if not os.path.exists('figs/'): os.system('mkdir figs')
     logging.basicConfig(
@@ -148,7 +132,7 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     # Load raw reads.
     gtf = HTSeq.GFF_Reader(lib['gtf_raw'], end_included=True)
-    reads_by_gene, counts_by_gene = get_bed_files(
+    ga, reads_by_gene, counts_by_gene = get_bed_files(
         bed_folder=lib['read_beds'], gtf=gtf,
         args=args, lib=lib)
     exons_as_rows = p_values_of_clusters.get_exonic_ranges(lib['gtf_with_names'])
@@ -156,6 +140,7 @@ if __name__ == '__main__':
         cluster_reads.run(
             reads_by_gene, counts_by_gene, exons_as_rows,
             lib=lib, args=args)
+        cluster_combine.run(args, lib, gtf, exons_as_rows)
         print "Successfully finished."
         sys.exit()
     while True:
@@ -163,6 +148,7 @@ if __name__ == '__main__':
             cluster_reads.run(
                 reads_by_gene, counts_by_gene, exons_as_rows,
                 lib=lib, args=args)
+            cluster_combine.run(args, lib, gtf, exons_as_rows)
             print "Successfully finished."
         except:
             print traceback.format_exc()
@@ -175,6 +161,7 @@ if __name__ == '__main__':
                 reload(config)
                 reload(cluster_reads)
                 reload(p_values_of_clusters)
+                reload(cluster_combine)
                 print "Successfully recompiled."
                 reloaded = True
             except:

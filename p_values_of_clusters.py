@@ -173,6 +173,7 @@ def visualize(rigs, ranges, clusters):
 
 
 def get_exonic_ranges(fname):
+    print 'get e r ' + fname
     df = pandas.read_csv(fname, sep='\t')
     gtfd = df.to_dict('records')
     by_gene = collections.defaultdict(list)
@@ -180,6 +181,7 @@ def get_exonic_ranges(fname):
         if row['2'] != 'exon':
             continue
         by_gene[row['gene_id']].append(row)
+    print 'returning ' + str(by_gene)[:100]
     return by_gene
 
 

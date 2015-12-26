@@ -44,13 +44,10 @@ Output:
     """
     exons = dict((k, v) for k, v in exons.iteritems() if is_good_gene(v))
     for fname in reads_by_gene_by_fname:
-        print "*" * 7 + '\n' + fname
+        print "*" * 7 + '\nFinding clusters in ' + fname
         reads_by_gene = reads_by_gene_by_fname[fname]
         stats(reads_by_gene)
-        print str(reads_by_gene.keys())[:100]
-        print str(exons.keys())[:100]
         gene_list = set(set(reads_by_gene.keys()) & set(exons.keys()))
-        # gene_list = ['WBGene00001595', 'WBGene00014568']
         if len(gene_list) == 0:
             print "No targets found for {i}. Skipping...".format(i=fname)
             continue
@@ -60,18 +57,18 @@ Output:
             [add_p_values(*tup) for tup in yield_gene_with_tup(
                 gene_list, reads_by_gene, exons, get_p_values_from_scramble_function)]
         ))
-        # for gene in clusters_w_pvalue:
-        #     print "{g}: {v}".format(g=gene, v=clusters_w_pvalue[gene])
         table = convert_to_table(clusters_w_pvalue, exons)
         # Get rid of clusters with only one read.
         table = table[table['max_coverage'] > 1]
         if len(table.index) == 0:
-            print 'empty table'
+            print 'No clusters found in {o}...'.format(o=fname)
             continue
         add_stats(table)
         output_filename = lib['clusters_dir'] + '/' + os.path.basename(
             fname).partition('.bed')[0] + '.txt'
+        if not os.path.exists(lib['clusters_dir']): os.system('mkdir ' + lib['clusters_dir'])
         write_table(table, output_filename=output_filename)
+        print "Example of cluster calls for {o}:".format(o=fname)
         print table.head(3)
     return table
 
@@ -82,7 +79,6 @@ def write_table(table, output_filename='temp.txt'):
     expected_columns = [
         'chrom', 'left', 'right', 'max_coverage', 'gene_id', 'strand', 'pval',
     ]
-
     extra_columns = list(set(table.columns) - set(expected_columns))
     column_order = expected_columns + extra_columns
     table = table[column_order]
