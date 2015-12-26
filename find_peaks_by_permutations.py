@@ -25,8 +25,6 @@ lib[expt_bed1]...
 lib['gtf_raw']
 lib['read_beds']
 lib['gtf_with_names']
-exp_bedgraph_minus
-exp_bedgraph_plus
 clusters_dir
 permutation_peaks_dir
 
