@@ -3,7 +3,7 @@ setup(
     # Application name:
     name="peaks-by-permutations",
     description="Find peaks by permutations of reads.",
-    long_description=open("README.txt").read(),
+    long_description=open("README.rst").read(),
 
     # Version number (initial):
     version="0.1.0",
