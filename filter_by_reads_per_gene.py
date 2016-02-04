@@ -37,7 +37,7 @@ def sum_reads_in_gene(full, lib=None):
     return full
 
 
-def apply_cutoff(full, ratio_cutoff=2, min_reads_cutoff=200,
+def apply_cutoff(full, ratio_cutoff=0, min_reads_cutoff=200,
                  only_mrna=False):
     past = full[full['ratio']>=ratio_cutoff]
     past = past[past['exp']>min_reads_cutoff]
