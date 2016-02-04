@@ -97,14 +97,20 @@ def load_gtf_as_dict_and_locate_in_gene(peaks, filename, use_header_val='gene_na
 #    with open(filename, 'r') as f:
 #        for li in f:
 #            s = li.rstrip('\n').split('\t')
+    print gtf.keys()[:10]
+    print gtf[gtf.keys()[0]]
     for gene in peaks:
         for p in peaks[gene]:
             gene = p['gene_name']
+            print gene
+
             if gene not in gtf:
                 p['location'] = 'Unknown'
                 p['biotype'] = 'Unknown'
                 p['gene_len'] = 'Unknown'
+                print 'no'
                 continue
+            print 'y'
             this_txpt = gtf[gene][0]['transcript_id']  # Expect only one txpt, but just in case.
             p['gene_len'] = sum([
                 int(row['4']) - int(row['3']) for row in gtf[gene] if (
@@ -231,7 +237,6 @@ def add_ratio_column(
     dfd = [add_ratio_to_row(row, positive_labels, negative_labels, label) for row in dfd]
     df = pandas.DataFrame(dfd)
     out_cols = get_cols(dfd)
-    print df[out_cols]
     df.to_csv(input_filename, index=False, sep='\t')
     return df
 
@@ -502,7 +507,8 @@ if __name__ == '__main__':
         print "Adding a gene ID column..."
         add_wb_name(clip_by_peak, args.peaks)
     print "Calculating ratios..."
-    add_ratio_column(input_filename=args.peaks, label='n2_ratio')
+    add_ratio_column(input_filename=args.peaks,
+                     label='n2_ratio', positives_include='fog_')
     clip = read_as_table_of_lists(args.peaks, use_header_val='gene_id')
     if 'fog3_rip_ranks' in lib:
         rip = read_as_table(lib['fog3_rip_ranks'], use_header_val='WB ID')
@@ -516,7 +522,7 @@ if __name__ == '__main__':
             for row in clip[gene]:
                 row.update(extra)
     clip = load_gtf_as_dict_and_locate_in_gene(clip, lib['gtf'],
-                                               use_header_val='gene_id')
+                                               use_header_val='gene_name')
     add_height(clip, positives_include='exp')
     flattened = []
     for gene in clip: flattened.extend(clip[gene])

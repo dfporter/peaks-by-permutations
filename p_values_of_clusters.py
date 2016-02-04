@@ -223,7 +223,7 @@ def get_exonic_ranges(fname):
 
 
 def get_exon_ranges_and_scramble_and_return_probabilities(
-        by_gene=None, gene_name=None, num_reads=2, num_permutations=10,
+        by_gene=None, gene_name=None, num_reads=2, num_permutations=1000,
         read_lengths=[],
         txpt_id=None, exons=None):
     # print txpt_id
