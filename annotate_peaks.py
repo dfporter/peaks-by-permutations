@@ -503,24 +503,23 @@ if __name__ == '__main__':
         add_wb_name(clip_by_peak, args.peaks)
     print "Calculating ratios..."
     add_ratio_column(input_filename=args.peaks, label='n2_ratio')
-    rip = read_as_table(lib['fog3_rip_ranks'], use_header_val='WB ID')
     clip = read_as_table_of_lists(args.peaks, use_header_val='gene_id')
-    print "Peaks %i, ex: %s" % (len(clip.keys()), str(clip.keys()[0]))
-    for gene in clip:
-        if gene in rip:
-            extra = {'RIP_target': 1, 'RIP_rank': rip[gene]['Rank'],
-                          'Seq ID': rip[gene]['Seq ID']}
-        else:
-            extra = {'RIP_target': 0, 'RIP_rank': -1, 'Seq ID': ''}
-        for row in clip[gene]:
-            row.update(extra)
-    # print clip
+    if 'fog3_rip_ranks' in lib:
+        rip = read_as_table(lib['fog3_rip_ranks'], use_header_val='WB ID')
+        print "Peaks %i, ex: %s" % (len(clip.keys()), str(clip.keys()[0]))
+        for gene in clip:
+            if gene in rip:
+                extra = {'RIP_target': 1, 'RIP_rank': rip[gene]['Rank'],
+                              'Seq ID': rip[gene]['Seq ID']}
+            else:
+                extra = {'RIP_target': 0, 'RIP_rank': -1, 'Seq ID': ''}
+            for row in clip[gene]:
+                row.update(extra)
     clip = load_gtf_as_dict_and_locate_in_gene(clip, lib['gtf'],
                                                use_header_val='gene_id')
     add_height(clip, positives_include='exp')
     flattened = []
     for gene in clip: flattened.extend(clip[gene])
-    print flattened[0]
     get_sequences(flattened)
     clip_df = pandas.DataFrame(flattened)
     out_cols = get_cols(clip_df)
@@ -532,5 +531,6 @@ if __name__ == '__main__':
     clip_df.to_csv(args.peaks,
                    # cols=out_cols,
                    sep='\t', index=False)
+
 
 
