@@ -61,7 +61,7 @@ def read_args():
 
 
 def run(args, lib):
-    if not os.exists('./tables/'): os.system('mkdir tables/')
+    if not os.path.exists('./tables/'): os.system('mkdir tables/')
     table = pandas.read_csv(args.peaks, sep='\t')
     table = cluster_combine.get_rpkm(
         table, lib, counts_fname=args.counts)
