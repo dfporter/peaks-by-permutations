@@ -8,5 +8,6 @@ Uses a config.ini file to set up all the paths.
 Needs .bed files of every replicate, plus a couple gtf-based files.
 
 Example: ::
+
 	$ python find_peaks_by_permutations.py -c <directory with config.py>
 
