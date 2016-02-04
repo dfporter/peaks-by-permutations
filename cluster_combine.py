@@ -157,7 +157,7 @@ def get_rpkm(
     print """cluster_combine.get_rpkm():
 read_cols from file {a}: {s}. Top line after conversion from raw reads to rpkm: {k}
 ***""".format(
-        a=fname, s=read_cols, k=db.iloc[0]
+        a=counts_fname, s=read_cols, k=db.iloc[0]
     )
     full = pandas.merge(db, table, on='gene_id')
     return full

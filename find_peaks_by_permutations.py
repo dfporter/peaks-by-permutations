@@ -46,6 +46,7 @@ import re
 import cluster_reads
 import p_values_of_clusters
 import cluster_combine
+import filter_by_reads_per_gene
 
 
 def read_args():
@@ -57,6 +58,10 @@ def read_args():
     parser.add_argument('-v', '--no_ui',
                         help='No user input.',
                         default=False, action='store_true')
+    parser.add_argument('-t', '--filter_by_counts',
+                        help='(Optional) Filter the output using read count values supplied by'\
+                             ' the file passed to this argument. Default: False',
+                        default='')
     args = parser.parse_args()
     return args
 
@@ -70,7 +75,6 @@ def get_bed_files(bed_folder='beds/', gtf=None, args=None, lib=None):
             gtfd[feature.name].add(feature)
     control_names = [lib[x] for x in lib.keys() if re.match('control_bed.*', x) is not None]
     exp_names = [lib[x] for x in lib.keys() if re.match('exp_bed.*', x) is not None]
-    all_names = control_names + exp_names
     bed_file_list = [
         "/".join([bed_folder, x]) for x in control_names + exp_names
     ]
@@ -140,6 +144,10 @@ if __name__ == '__main__':
             reads_by_gene, counts_by_gene, exons_as_rows,
             lib=lib, args=args)
         cluster_combine.run(args, lib, gtf, exons_as_rows)
+        if args.filter_by_counts != '':
+            args.counts = args.filter_by_counts
+            args.peaks = 'permutation_peaks/combined_exp.txt'
+            filter_by_reads_per_gene.run(args, lib)
         print "Successfully finished."
         sys.exit()
     while True:
@@ -148,6 +156,11 @@ if __name__ == '__main__':
                 reads_by_gene, counts_by_gene, exons_as_rows,
                 lib=lib, args=args)
             cluster_combine.run(args, lib, gtf, exons_as_rows)
+            if args.filter_by_counts != '':
+                import filter_by_reads_per_gene
+                args.counts = args.filter_by_counts
+                args.peaks = 'permutation_peaks/combined_exp.txt'
+                filter_by_reads_per_gene.run(args, lib)
             print "Successfully finished."
         except:
             print traceback.format_exc()

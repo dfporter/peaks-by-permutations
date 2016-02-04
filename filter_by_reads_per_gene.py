@@ -14,27 +14,30 @@ import re
 
 def sum_reads_in_gene(full, lib=None):
     if lib is not None:
-        beds = set([lib[x] for x in lib if re.match('exp_bed.*', x)])
+        beds = set([lib[x] for x in lib if re.match('exp.*', x)])
         exp_counts = [x.rstrip('.bed') + '_counts.txt' for x in beds]
-        beds = set([lib[x] for x in lib if re.match('control_bed.*', x)])
+        beds = set([lib[x] for x in lib if re.match('control.*', x)])
         control_counts = [x.rstrip('.bed') + '_counts.txt' for x in beds]
     else:
         counts = [x for x in full.columns if re.match('.*_counts\.txt', x)]
         control_counts = []
         exp_counts = []
         for x in counts:
+            print x
             if re.match('.*control.*', x):
                 control_counts.append(x)
+                print 'contr'
             else:
                 exp_counts.append(x)
+                print 'ex'
     for i, row in full.iterrows():
         full.loc[i, 'exp'] = sum([row[x] for x in exp_counts])
         full.loc[i, 'control'] = sum([row[x] for x in control_counts])
-    full.loc[i, 'ratio'] = float(full.loc[i, 'exp'])/max([1., full.loc[i, 'control']])
+        full.loc[i, 'ratio'] = float(full.loc[i, 'exp'])/max([1., full.loc[i, 'control']])
     return full
 
 
-def apply_cutoff(full, ratio_cutoff=10, min_reads_cutoff=200,
+def apply_cutoff(full, ratio_cutoff=2, min_reads_cutoff=200,
                  only_mrna=False):
     past = full[full['ratio']>=ratio_cutoff]
     past = past[past['exp']>min_reads_cutoff]
@@ -57,16 +60,12 @@ def read_args():
     return args
 
 
-if __name__ == '__main__':
-    args = read_args()
-    sys.path.insert(0, args.config_dir)
-    import config
-    lib = config.config()
-    del sys.path[0]
+def run(args, lib):
     table = pandas.read_csv(args.peaks, sep='\t')
     table = cluster_combine.get_rpkm(
         table, lib, counts_fname=args.counts)
-    table = sum_reads_in_gene(table, lib=lib)
+    table = sum_reads_in_gene(table, lib=None)
+    table.to_csv('tmp', sep='\t')
     print 'ratio: min {z} max {zz} mean {aa}'.format(
         z=min(table['ratio'].tolist()),
         zz=max(table['ratio'].tolist()),
@@ -77,8 +76,16 @@ if __name__ == '__main__':
         zz=max(table['exp'].tolist()),
         xx=np.mean(table['exp'].tolist()),
     )
-
     table = apply_cutoff(table)
     table.to_csv('tables/past_cutoff.txt', sep='\t')
+
+
+if __name__ == '__main__':
+    args = read_args()
+    sys.path.insert(0, args.config_dir)
+    import config
+    lib = config.config()
+    del sys.path[0]
+    run(args, lib)
     # print table.iloc[0]
 

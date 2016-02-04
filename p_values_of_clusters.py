@@ -73,7 +73,31 @@ def get_ranges_set_by_coverage_depth(points):
     return ranges
 
 
-def fast_find_clusters_in_gene(positions):
+def find_max_height_from_list_of_intervals(positions):
+    arr = np.zeros(max([x[1] for x in positions]) + 1)
+    for pos in positions:
+        arr[pos[0]:pos[1]] += 1
+    return np.max(arr)
+
+
+def find_max_height_from_list_of_intervals_for_a_set_of_intervals(positions, ranges):
+    arr = np.zeros(max([x[1] for x in positions]) + 1)
+    for pos in positions:
+        arr[pos[0]:pos[1]] += 1
+    max_vals = []
+    for iv in ranges:
+        max_vals.append(np.max(arr[iv[0]:iv[1]]))
+    return max_vals
+
+
+def find_max_height_from_list_of_htseq_intervals(positions):
+    arr = np.zeros(max([x.end for x in positions]) + 1)
+    for pos in positions:
+        arr[pos[0]:pos[1]] += 1
+    return np.max(arr)
+
+
+def fast_find_clusters_in_gene(positions, add_max_height=False):
     clusters = []
     current_cluster = None
     max_overlap_in_cluster = 0
@@ -94,7 +118,15 @@ def fast_find_clusters_in_gene(positions):
     if current_cluster is not None:
         clusters.append(current_cluster + [max_overlap_in_cluster])
     if len(clusters) == 0:
-        clusters = [[0, 0, 1]]
+        if add_max_height:
+            return [[0, 0, 1, 0]]
+        else:
+            return [[0, 0, 1]]
+    if add_max_height:
+        max_heights = find_max_height_from_list_of_intervals_for_a_set_of_intervals(
+            positions, clusters
+        )
+        clusters = [clusters[i] + [max_heights[i]] for i in range(len(clusters))]
     return clusters
 
 
@@ -113,13 +145,18 @@ Output:
             continuous coverage.
     """
     # rigs is a list of HTSeq iv objects, in genomic coordinates.
-    points = []  # Holds (start, stop, symbol).
+    points = []
+    segments = []  # Holds (start, stop, symbol).
     for index, iv in enumerate(rigs):
         points.append((iv.start, 'start', index))
         points.append((iv.end, 'end', index))
+        segments.append([iv.start, iv.end, index])
     points.sort()
+    # This returns [start, end, # reads in cluster, max height in cluster].
+    clusters = fast_find_clusters_in_gene(segments, add_max_height=True)
+    return clusters
     ranges = get_ranges_set_by_coverage_depth(points)
-    # ranges = [(start, stop, set of indexes)..].
+    # ranges = [(start, stop, set of indexes)...].
     clusters = []
     current_cluster = None
     max_overlap_in_cluster = 0
@@ -186,8 +223,9 @@ def get_exonic_ranges(fname):
 
 
 def get_exon_ranges_and_scramble_and_return_probabilities(
-        by_gene=None, gene_name=None, num_reads=2, num_permutations=1000,
+        by_gene=None, gene_name=None, num_reads=2, num_permutations=10,
         txpt_id=None, exons=None):
+    # print txpt_id
     if txpt_id is None or exons is None:
         txpt_id, exons = find_longest_txpt(by_gene[gene_name])  # Returns txpt_id, [(start, stop)...]
     max_coverages = []
@@ -197,14 +235,19 @@ def get_exon_ranges_and_scramble_and_return_probabilities(
     for _range in ranges:
         list_of_range_starts.append(_range[0])
         total_len_of_ranges += _range[1] - _range[0]
-    if num_reads>1:
+    if num_reads > 1:
         for j in range(num_permutations):
             reads = []
             rand_starts = np.random.random_integers(0, total_len_of_ranges, size=num_reads)
             for n in rand_starts:
-                reads.append([n, n + np.random.random_integers(5, high=20)])
-            clusters = fast_find_clusters_in_gene(reads)
-            max_coverages.append(max([x[2] for x in clusters]))
+                reads.append([n, n + np.random.random_integers(15, high=30)])
+            max_coverages.append(
+                np.max([
+                    x[3] for x in fast_find_clusters_in_gene(reads, add_max_height=True)
+                ])
+            )
+            # clusters = fast_find_clusters_in_gene(reads)
+            # max_coverages.append(max([x[2] for x in clusters]))
         return get_histogram(max_coverages)
     for j in range(num_permutations):
         ivs, total_len = generate_ivs(
@@ -277,7 +320,7 @@ Output:
     counts_with_known_p_values = sorted(probabilities.keys(), key=lambda x: x)
     for clust in clusters:
         clusters_w_pvalue.append(clust)
-        index = bisect.bisect(counts_with_known_p_values, clust[2])
+        index = bisect.bisect(counts_with_known_p_values, clust[3])
         if index == 0:
             clusters_w_pvalue[-1].append(1.)
         elif index >= len(counts_with_known_p_values):

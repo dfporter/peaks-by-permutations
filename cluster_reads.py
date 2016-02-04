@@ -47,7 +47,7 @@ Output:
         print "*" * 7 + '\nFinding clusters in ' + fname
         reads_by_gene = reads_by_gene_by_fname[fname]
         stats(reads_by_gene)
-        gene_list = set(set(reads_by_gene.keys()) & set(exons.keys()))
+        gene_list = set(reads_by_gene.keys()) & set(exons.keys())
         if len(gene_list) == 0:
             print "No targets found for {i}. Skipping...".format(i=fname)
             continue
@@ -87,7 +87,8 @@ def write_table(table, output_filename='temp.txt'):
 
 def convert_to_table(dict_by_gene_of_clusters, exons):
     expected_columns = [
-        'chrom', 'left', 'right', 'max_coverage', 'gene_id', 'strand', 'pval'
+        'chrom', 'left', 'right', 'max_coverage', 'gene_id', 'strand', 'pval',
+        'height'
     ]
     table = []
     for gene in dict_by_gene_of_clusters:
@@ -97,14 +98,16 @@ def convert_to_table(dict_by_gene_of_clusters, exons):
         for row in dict_by_gene_of_clusters[gene]:
             if row is None: continue
             if row[0] != 'NA':
-                table.append([gene, row[0], row[1], row[2], row[3]])
+                table.append([gene, row[0], row[1], row[2], row[3], row[4]])
     if len(table) == 0:
         df = pandas.DataFrame(columns=expected_columns)
         return df
     table = [
         {'chrom': exons[gene][0]['0'], 'strand': exons[gene][0]['6'],
-         'gene_id': gene, 'left': left, 'right': right, 'max_coverage': coverage,
-         'pval': pval} for (gene, left, right, coverage, pval) in table
+         'gene_id': gene, 'left': left, 'right': right,
+         'max_coverage': max_cluster_size,
+         'height': max_height,
+         'pval': pval} for (gene, left, right, max_cluster_size, max_height, pval) in table
     ]
     table = pandas.DataFrame(table)
     try:
@@ -138,7 +141,7 @@ def add_p_values(gene, reads_by_gene, exons, get_pvals_from_scramble):
     txpt_exons = exons[gene]
     txpt_id, txpt_exons = p_values_of_clusters.find_longest_txpt(txpt_exons)
     probabilities = get_pvals_from_scramble(
-        num_reads=len(rig), num_permutations=1000,
+        num_reads=len(rig), num_permutations=100,
         txpt_id=txpt_id, exons=txpt_exons)
     clusters_w_pvalue = p_values_of_clusters.add_p_values_from_histogram(
         probabilities, clusters
