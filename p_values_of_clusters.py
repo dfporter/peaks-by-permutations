@@ -224,6 +224,7 @@ def get_exonic_ranges(fname):
 
 def get_exon_ranges_and_scramble_and_return_probabilities(
         by_gene=None, gene_name=None, num_reads=2, num_permutations=10,
+        read_lengths=[],
         txpt_id=None, exons=None):
     # print txpt_id
     if txpt_id is None or exons is None:
@@ -239,8 +240,9 @@ def get_exon_ranges_and_scramble_and_return_probabilities(
         for j in range(num_permutations):
             reads = []
             rand_starts = np.random.random_integers(0, total_len_of_ranges, size=num_reads)
-            for n in rand_starts:
-                reads.append([n, n + np.random.random_integers(15, high=30)])
+            for i, n in enumerate(rand_starts):
+                reads.append([n, n + read_lengths[i]])
+                # reads.append([n, n + np.random.random_integers(15, high=30)])
             max_coverages.append(
                 np.max([
                     x[3] for x in fast_find_clusters_in_gene(reads, add_max_height=True)
