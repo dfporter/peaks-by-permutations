@@ -20,11 +20,11 @@ Run as;
 python find_peaks_by_permutations.py -c <directory with config.py>
 
 From config.ini, this uses the following variables:
-lib[control_bed1]...
-lib[expt_bed1]...
-lib['gtf_raw']
-lib['read_beds']
-lib['gtf_with_names']
+exp_bed1, ...
+control_bed1, ...
+gtf_raw
+read_beds
+gtf
 clusters_dir
 permutation_peaks_dir
 
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     ga, reads_by_gene, counts_by_gene = get_bed_files(
         bed_folder=lib['read_beds'], gtf=gtf,
         args=args, lib=lib)
-    exons_as_rows = p_values_of_clusters.get_exonic_ranges(lib['gtf_with_names'])
+    exons_as_rows = p_values_of_clusters.get_exonic_ranges(lib['gtf'])
     if args.no_ui:
         cluster_reads.run(
             reads_by_gene, counts_by_gene, exons_as_rows,

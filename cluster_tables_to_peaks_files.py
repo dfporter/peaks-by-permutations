@@ -39,7 +39,7 @@ if __name__ == '__main__':
     gtf = HTSeq.GFF_Reader(lib['gtf_raw'], end_included=True)
     # get_txpts() uses the peaks argument to select what txpts to load by a call to
     #  set(peaks['gene_name'].tolist()). That is, peaks is a dataframe.
-    exons_as_rows = p_values_of_clusters.get_exonic_ranges(lib['gtf_with_names'])
+    exons_as_rows = p_values_of_clusters.get_exonic_ranges(lib['gtf'])
     if args.no_ui:
         cluster_combine.run(args, lib, gtf, exons_as_rows)
         sys.exit()

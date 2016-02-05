@@ -255,31 +255,6 @@ def _as_list(df):
     return df_l
 
 
-def add_wb_name_to_gtf(lib):
-    fname = lib['gtf']
-    gtf = {}
-    with open(fname, 'r') as f:
-        header = next(f)
-        for line in f:
-            gene_id = re.match('.*gene_id "([^"]+)";.*', line)
-            if gene_id is None: print line
-            gene_id = gene_id.group(1).partition('.')[0]
-            gene_name = re.match('.*gene_name "([^"]+)";.*', line)
-            biotype = re.match('.*biotype "([^"]+)";.*', line)
-            biotype = biotype.group(1)
-            if gene_name in gtf:
-                if gene_id == gtf[gene_name]['gene_id']:
-                    gtf[gene_name]['lines'].append(line)
-                else:
-                    print "Two gene IDs for the same gene name:",
-                    print "%s: %s vs %s" % (gene_name, gene_id, gtf[gene_name]['gene_id'])
-            else:
-                gtf[gene_name] = {'gene_id': gene_id, 'lines': [line], 'biotype': biotype}
-    with open(lib['gtf'], 'w') as f:
-        f.write(header.rstrip('\n') + '\tgene_id\tbiotype\n')
-        for gene in gtf:
-            for line in gtf[gene]['lines']:
-                f.write(line.rstrip('\n') + '\t' + '\t'.join([gtf[gene]['gene_id'], gtf[gene]['biotype']]) +'\n')
 
 
 def add_gene_name(peak_df, lib):  #, fname='./lib/gtf_with_names_column.txt'):
@@ -289,6 +264,7 @@ def add_gene_name(peak_df, lib):  #, fname='./lib/gtf_with_names_column.txt'):
         if row['gene_id'] in gtf:
             peak_df.loc[i, 'gene_name'] = gtf[row['gene_id']]['gene_name']
     return peak_df
+
 
 def add_wb_name(
         peaks, peaks_fname, fname='./lib/gtf_with_id_column.txt'):
@@ -482,10 +458,6 @@ if __name__ == '__main__':
         help='''Filename of RIP data.'''
     )
     parser.add_argument(
-        '-g', '--gtf', default=False, action='store_true',
-        help='''Add gene_id column to gtf.'''
-    )
-    parser.add_argument(
         '-c', '--config_dir', default='analysis/',
         help='Directory of config.py file.'
     )
@@ -496,8 +468,6 @@ if __name__ == '__main__':
     peaks_df = pandas.read_csv(args.peaks, sep='\t')
     peaks_df = add_reads_in_peak_from_bedgraph(peaks_df, lib['bedgraphs_folder'], lib)
     print peaks_df.head(1)
-    if args.gtf:
-        add_wb_name_to_gtf(lib)
     if 'gene_name' not in open(args.peaks, 'r').readline().rstrip('\n').split('\t'):
         print "Adding a gene_name column..."
         peak_df = add_gene_name(peaks_df, lib)
