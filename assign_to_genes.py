@@ -55,7 +55,7 @@ def map_bed(bed_filename, features):
 #    counts = collections.collections.Counter()
     counts = collections.defaultdict(int)
     for line_num, (read_iv, number_of_reads), in enumerate(read_bed(bed_filename)):
-        if not line_num % 100000:
+        if line_num and (not line_num % 100000):
             print line_num
             elapsed = time.clock() - start_time
             per_ten_million = 1e6 * elapsed/max([1, float(line_num)])
@@ -187,13 +187,17 @@ def get_args():
     return args
 
 
-def run():
-    args = get_args()
-    sys.path.insert(0, args.config)
-    import config
-    lib = config.config()
+def run(use_this_lib=None, bed=None):
+    if use_this_lib is not None:
+        lib = use_this_lib
+    else:
+        args = get_args()
+        bed = args.bed
+        sys.path.insert(0, args.config)
+        import config
+        lib = config.config()
     features = get_gtf(lib, gtf_file=lib['gtf_raw'])#'./genomes/Saccharomyces_cerevisiae.EF4.70.gtf')
-    map_folder(args.bed, features)
+    map_folder(bed, features)
     fill_in_gaps('counts', lib)
     create_combined_file_of_counts('counts',
                                    output_filename='combined_counts.txt')

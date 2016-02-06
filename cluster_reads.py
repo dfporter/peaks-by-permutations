@@ -142,7 +142,6 @@ def add_p_values(gene, reads_by_gene, exons, get_pvals_from_scramble):
     read_lengths = [x.end - x.start for x in rig]
     txpt_id, txpt_exons = p_values_of_clusters.find_longest_txpt(txpt_exons)
     probabilities = get_pvals_from_scramble(
-        num_reads=len(rig),
         read_lengths=read_lengths,
         txpt_id=txpt_id, exons=txpt_exons)
     clusters_w_pvalue = p_values_of_clusters.add_p_values_from_histogram(

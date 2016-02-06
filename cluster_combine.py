@@ -153,7 +153,7 @@ def get_rpkm(
     for col in read_cols:
         total = float(db[col].sum())
         db[col] = [1e6 * float(x)/total for x in db[col].tolist()]
-        db[col] = [1e3 * float(x)/lens_as_list[i] for i, x in enumerate(db[col].tolist())]
+        db[col] = [1e3 * float(x)/max([1, lens_as_list[i]]) for i, x in enumerate(db[col].tolist())]
     print """cluster_combine.get_rpkm():
 read_cols from file {a}: {s}. Top line after conversion from raw reads to rpkm: {k}
 ***""".format(

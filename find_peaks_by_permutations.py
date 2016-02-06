@@ -129,7 +129,7 @@ if __name__ == '__main__':
     if not os.path.exists('logs/'): os.system('mkdir logs')
     if not os.path.exists('figs/'): os.system('mkdir figs')
     logging.basicConfig(
-        filename='logs/%s_find_peaks_by_perm.log' % datetime.datetime.now().strftime('%Hh%Mm'),
+        filename='logs/%s_find_peaks_by_permutations.log' % datetime.datetime.now().strftime('%Hh%Mm'),
         level=logging.DEBUG)
     logging.info('Module called %s' % str(time.localtime()))
     logger = logging.getLogger(__name__)

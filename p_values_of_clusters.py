@@ -210,11 +210,11 @@ def visualize(rigs, ranges, clusters):
 
 
 def get_exonic_ranges(fname):
-    print 'get e r ' + fname
+    print 'Getting exonic ranges from ' + fname
     df = pandas.read_csv(fname, sep='\t')
     gtfd = df.to_dict('records')
     by_gene = collections.defaultdict(list)
-    for row in gtfd:
+    for i, row in enumerate(gtfd):
         if row['2'] != 'exon':
             continue
         by_gene[row['gene_id']].append(row)
@@ -224,7 +224,7 @@ def get_exonic_ranges(fname):
 
 def get_exon_ranges_and_scramble_and_return_probabilities(
         by_gene=None, gene_name=None, num_reads=2, num_permutations=1000,
-        read_lengths=[],
+        read_lengths=(),
         txpt_id=None, exons=None):
     # print txpt_id
     if txpt_id is None or exons is None:
@@ -239,7 +239,7 @@ def get_exon_ranges_and_scramble_and_return_probabilities(
     if num_reads > 1:
         for j in range(num_permutations):
             reads = []
-            rand_starts = np.random.random_integers(0, total_len_of_ranges, size=num_reads)
+            rand_starts = np.random.random_integers(0, total_len_of_ranges, size=len(read_lengths))
             for i, n in enumerate(rand_starts):
                 reads.append([n, n + read_lengths[i]])
                 # reads.append([n, n + np.random.random_integers(15, high=30)])
@@ -251,6 +251,7 @@ def get_exon_ranges_and_scramble_and_return_probabilities(
             # clusters = fast_find_clusters_in_gene(reads)
             # max_coverages.append(max([x[2] for x in clusters]))
         return get_histogram(max_coverages)
+    return {0: 1.0, 1: 1.0}
     for j in range(num_permutations):
         ivs, total_len = generate_ivs(
             num_reads=num_reads, ranges=exons)
@@ -271,17 +272,18 @@ def get_histogram(observed_depths, verbose=False):
     total_tests = float(len(observed_depths))
     sum_so_far = 0.
     probs = collections.defaultdict(float)
-    for key in keys:
-        probs[key] = float(
+    for observed_value in sorted(_counts.keys()):
+        probs[observed_value] = float(
             1 - float(sum_so_far/max([total_tests, 1.]))
         )
         if verbose:
             print """\
 {k}: {i} (cumulative: {s}/{t}) -> probability of this value or higher {p}""".format(
-            k=key, i=_counts[key], s=sum_so_far, t=total_tests,
-            p=probs[key],
+            k=observed_value, i=_counts[observed_value],
+            s=sum_so_far, t=total_tests,
+            p=probs[observed_value],
         )
-        sum_so_far += float(_counts[key])
+        sum_so_far += float(_counts[observed_value])
     return probs
 
 
@@ -325,7 +327,9 @@ Output:
         index = bisect.bisect(counts_with_known_p_values, clust[3])
         if index == 0:
             clusters_w_pvalue[-1].append(1.)
-        elif index >= len(counts_with_known_p_values):
+        elif index > len(counts_with_known_p_values):
+            clusters_w_pvalue[-1].append(0.)
+        elif clust[3] > max(probabilities.keys()):
             clusters_w_pvalue[-1].append(0.)
         else:
             closest_measured_value = counts_with_known_p_values[index-1]
