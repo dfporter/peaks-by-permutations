@@ -147,6 +147,8 @@ if __name__ == '__main__':
         if args.filter_by_counts != '':
             args.counts = args.filter_by_counts
             args.peaks = 'permutation_peaks/combined_exp.txt'
+            os.system('python annotate_peaks.py -c {a} -p permutation_peaks/combined_exp.txt'.format(
+                a=args.config_dir))
             filter_by_reads_per_gene.run(args, lib)
         print "Successfully finished."
         sys.exit()
@@ -156,6 +158,8 @@ if __name__ == '__main__':
                 reads_by_gene, counts_by_gene, exons_as_rows,
                 lib=lib, args=args)
             cluster_combine.run(args, lib, gtf, exons_as_rows)
+            os.system('python annotate_peaks.py -c {a} -p permutation_peaks/combined_exp.txt'.format(
+                a=args.config_dir))
             if args.filter_by_counts != '':
                 import filter_by_reads_per_gene
                 args.counts = args.filter_by_counts
