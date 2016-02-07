@@ -42,6 +42,9 @@ def get_reproducible_peaks(ivs_by_gene):
             rig.extend(ivs_by_gene[gene][fname])
         clusters = p_values_of_clusters.find_clusters_in_gene(rig)
         clusters = [x + [0] for x in clusters]
+        for row in clusters:
+            if row[2] > 4:  # Number of replicates with cluster.
+                print clusters
         # clusters is a list of the following for each cluster in this gene:
         # [left, right,, max_coverage=number of replicates with peak,
         #       a zero for p value]

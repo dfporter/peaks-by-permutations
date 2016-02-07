@@ -103,16 +103,26 @@ def fast_find_clusters_in_gene(positions, add_max_height=False):
     max_overlap_in_cluster = 0
     positions = sorted(positions, key=lambda x: x[0])
     for a_range in positions:
-        if current_cluster is None:
+        print "*"
+        print positions
+        print current_cluster
+        print max_overlap_in_cluster
+        sys.stdin.readline()
+        if current_cluster is None:  # The initial run through the loop.
             current_cluster = [a_range[0], a_range[1]]
             max_overlap_in_cluster = 1
         else:
             # Do we overlap the current cluster?
             if a_range[0] < current_cluster[1]:
                 max_overlap_in_cluster += 1
-                current_cluster[1] = a_range[1]
+                current_cluster[1] = max([a_range[1], current_cluster[1]])
             else:
                 clusters.append(current_cluster + [max_overlap_in_cluster])
+                if len(clusters[-1]) > 4:
+                    print ">4 rep cluster"
+                    print a_range
+                    print positions
+                print max_overlap_in_cluster
                 current_cluster = [a_range[0], a_range[1]]
                 max_overlap_in_cluster = 1
     if current_cluster is not None:
@@ -127,6 +137,7 @@ def fast_find_clusters_in_gene(positions, add_max_height=False):
             positions, clusters
         )
         clusters = [clusters[i] + [max_heights[i]] for i in range(len(clusters))]
+    print "=="
     return clusters
 
 
@@ -248,8 +259,6 @@ def get_exon_ranges_and_scramble_and_return_probabilities(
                     x[3] for x in fast_find_clusters_in_gene(reads, add_max_height=True)
                 ])
             )
-            # clusters = fast_find_clusters_in_gene(reads)
-            # max_coverages.append(max([x[2] for x in clusters]))
         return get_histogram(max_coverages)
     return {0: 1.0, 1: 1.0}
     for j in range(num_permutations):
