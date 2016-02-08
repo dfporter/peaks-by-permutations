@@ -112,10 +112,14 @@ def get_gene_len(genes, filename, use='gene_id'):
             lens[gene] = 1e3
             print 'Missing ' + gene
             continue
-        txpts = set([x['transcript_id'] for x in gtf[gene]]) - set([np.nan])
+        txpts = set([x['transcript_id'] for x in gtf[gene]]) - set([np.nan]) - set(['.'])
+        if len(txpts) > 1:
+            print "more than one txpt"
+            print txpts
         try:
             this_txpt = list(txpts)[0]  # Expect only one txpt, but just in case.
         except:
+            print "get_gene_len() error 119"
             print gene
             print txpts
             print gtf[gene]
@@ -125,6 +129,7 @@ def get_gene_len(genes, filename, use='gene_id'):
             )
         ])
         if lens[gene] == 0:
+            print "No gene len?"
             print this_txpt
             print set([x['transcript_id'] for x in gtf[gene]])
             print [x['2'] for x in gtf[gene]]
@@ -148,7 +153,7 @@ def get_rpkm(
     db = pandas.read_csv(counts_fname, sep='\t', index_col=False)
     if ('gene' in db.columns) and ('gene_id' not in db.columns):
         db['gene_id'] = db['gene']
-    lens = get_gene_len(db['gene'].tolist(), lib['gtf'], use='gene_id')
+    lens = get_gene_len(db['gene'].tolist(), lib['gtf_one_txpt_per_gene'], use='gene_id')
     lens_as_list = [float(lens[x]) for x in db['gene'].tolist()]
     read_cols = [x for x in db.columns if x[:4] != 'gene']
     for col in read_cols:

@@ -14,6 +14,8 @@ import find_peaks_by_permutations
 import p_values_of_clusters
 import cluster_combine
 import traceback
+import assign_to_genes
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -47,6 +49,7 @@ if __name__ == '__main__':
                 reload(randomize_reads)
                 reload(p_values_of_clusters)
                 reload(cluster_combine)
+                reload(assign_to_genes)
                 print "Successfully recompiled."
                 reloaded = True
             except:

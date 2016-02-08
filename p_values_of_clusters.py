@@ -103,11 +103,6 @@ def fast_find_clusters_in_gene(positions, add_max_height=False):
     max_overlap_in_cluster = 0
     positions = sorted(positions, key=lambda x: x[0])
     for a_range in positions:
-        print "*"
-        print positions
-        print current_cluster
-        print max_overlap_in_cluster
-        sys.stdin.readline()
         if current_cluster is None:  # The initial run through the loop.
             current_cluster = [a_range[0], a_range[1]]
             max_overlap_in_cluster = 1
@@ -122,7 +117,6 @@ def fast_find_clusters_in_gene(positions, add_max_height=False):
                     print ">4 rep cluster"
                     print a_range
                     print positions
-                print max_overlap_in_cluster
                 current_cluster = [a_range[0], a_range[1]]
                 max_overlap_in_cluster = 1
     if current_cluster is not None:
@@ -137,7 +131,6 @@ def fast_find_clusters_in_gene(positions, add_max_height=False):
             positions, clusters
         )
         clusters = [clusters[i] + [max_heights[i]] for i in range(len(clusters))]
-    print "=="
     return clusters
 
 
@@ -156,13 +149,13 @@ Output:
             continuous coverage.
     """
     # rigs is a list of HTSeq iv objects, in genomic coordinates.
-    points = []
-    segments = []  # Holds (start, stop, symbol).
-    for index, iv in enumerate(rigs):
-        points.append((iv.start, 'start', index))
-        points.append((iv.end, 'end', index))
-        segments.append([iv.start, iv.end, index])
-    points.sort()
+    # points = []
+    segments = [[iv.start, iv.end, index] for (index, iv) in enumerate(rigs)]  # Holds (start, stop, symbol).
+    # for index, iv in enumerate(rigs):
+    #     # points.append((iv.start, 'start', index))
+    #     # points.append((iv.end, 'end', index))
+    #     segments.append([iv.start, iv.end, index])
+    # points.sort()
     # This returns [start, end, # reads in cluster, max height in cluster].
     clusters = fast_find_clusters_in_gene(segments, add_max_height=True)
     return clusters

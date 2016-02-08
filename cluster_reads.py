@@ -133,7 +133,10 @@ def add_p_values(gene, reads_by_gene, exons, get_pvals_from_scramble):
     rig = reads_by_gene[gene]
     if len(rig) < 2:
         return ['NA', 'NA', '0.0', '1.0']
-    clusters = p_values_of_clusters.find_clusters_in_gene(rig)
+    clusters = p_values_of_clusters.fast_find_clusters_in_gene(
+        [[iv.start, iv.end, index] for (index, iv) in enumerate(rig)],
+        add_max_height=True
+    )
     if len(clusters) < 1:
         return ['NA', 'NA', '0.0', '1.0']
     if max([x[2] for x in clusters]) < 2:
