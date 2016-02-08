@@ -98,7 +98,7 @@ def read_a_bed_file(fname, ht_exons):
         return _ga, counts, reads_by_gene
     for n, line in enumerate(open(fname)):
         # if n > 1e6: break
-        if not n % 1e6:
+        if (n > 0) and (not n % 1e6):
             min_per_line = float(time.time() - start_time)/float(60 * max([1., n]))
             print "Line {n}: Elapsed: {te} s. Minutes for 10 million reads: {f}".format(
                 n=n, te=float(time.time() - start_time),

@@ -108,8 +108,6 @@ def get_gene_len(genes, filename, use='gene_id'):
 #            s = li.rstrip('\n').split('\t')
     lens = {}
     for gene in genes:
-        print "asasdf"
-        print gene
         if gene not in gtf:
             lens[gene] = 1e3
             print 'Missing ' + gene
