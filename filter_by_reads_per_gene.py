@@ -56,7 +56,17 @@ def read_args():
                         help='Peaks file.')
     parser.add_argument('-t', '--counts',
                         help='Counts per gene.')
+    parser.add_argument('-r', '--ratio_cutoff',
+                        help='Minimum RPKM enrichment in gene over \
+negative control (default 10).',
+                        default=10)
+    parser.add_argument('-n', '--min_reads_cutoff',
+                        help='Minimum RPKM in gene (selects for \
+frequent targts, default 200 RPKM summed accross replicates).',
+                        default=200)
     args = parser.parse_args()
+    args.ratio_cutoff = float(args.ratio_cutoff)
+    args.min_reads_cutoff = float(args.min_reads_cutoff)
     return args
 
 
@@ -77,7 +87,8 @@ def run(args, lib):
         zz=max(table['exp'].tolist()),
         xx=np.mean(table['exp'].tolist()),
     )
-    table = apply_cutoff(table)
+    table = apply_cutoff(table, ratio_cutoff=args.ratio_cutoff,
+                         min_reads_cutoff=args.min_reads_cutoff)
     table.to_csv('tables/past_cutoff.txt', sep='\t')
 
 

@@ -97,20 +97,15 @@ def load_gtf_as_dict_and_locate_in_gene(peaks, filename, use_header_val='gene_na
 #    with open(filename, 'r') as f:
 #        for li in f:
 #            s = li.rstrip('\n').split('\t')
-    print gtf.keys()[:10]
-    print gtf[gtf.keys()[0]]
     for gene in peaks:
         for p in peaks[gene]:
             gene = p['gene_name']
-            print gene
-
             if gene not in gtf:
                 p['location'] = 'Unknown'
                 p['biotype'] = 'Unknown'
                 p['gene_len'] = 'Unknown'
                 print 'no'
                 continue
-            print 'y'
             this_txpt = gtf[gene][0]['transcript_id']  # Expect only one txpt, but just in case.
             p['gene_len'] = sum([
                 int(row['4']) - int(row['3']) for row in gtf[gene] if (
@@ -148,7 +143,7 @@ def locate_in_gene(
     print "\tLocating peaks..."
     gtf_sep_cols = pandas.read_csv(gtf_filename, sep='\t')
     for n, peak in enumerate(peak_list):
-        if not n % 100: print n
+        if not n % 200: print n
         #try:
         #    if not index % 1000:
         #        print "\tLocating peak %i..." % index
@@ -232,8 +227,6 @@ def add_ratio_column(
     dfd = df.to_dict('records')
     positive_labels = [x for x in df.columns if (re.search(positives_include, x))]
     negative_labels = [x for x in df.columns if (re.search(negatives_include, x))]
-    print positive_labels
-    print negative_labels
     dfd = [add_ratio_to_row(row, positive_labels, negative_labels, label) for row in dfd]
     df = pandas.DataFrame(dfd)
     out_cols = get_cols(dfd)

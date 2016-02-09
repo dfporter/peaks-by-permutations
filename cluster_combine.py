@@ -17,13 +17,21 @@ import cluster_reads
 import p_values_of_clusters
 
 
-def get_ivs_by_gene(input_files):
+def get_ivs_by_gene(input_files, max_padj=0.01, min_coverage=2):
     ivs_by_gene = collections.defaultdict(dict)
+    print max_padj
+    print min_coverage
     for fname in input_files:
         print fname
         db = pandas.read_csv(fname, sep='\t')
-        db = db[db['padj'] < 0.01]
-        db = db[db['max_coverage']>1]
+        print db.head()
+
+        print len(db.index)
+        db = db[db['padj']<=max_padj]
+        print len(db.index)
+        db = db[db['max_coverage']>=min_coverage]
+        print 'finally'
+        print len(db.index)
         if ('gene_name' not in db.columns) and ('gene_id' in db.columns):
             db['gene_name'] = db['gene_id']
         db = db.groupby('gene_name')
@@ -63,9 +71,16 @@ def scribe(cmd):
     os.system(cmd)
 
 
-def get_combined_clusters_from_file_list(file_list, exons_as_rows, output_filename='temp.txt'):
-    ivs_by_gene = get_ivs_by_gene(file_list)
+def get_combined_clusters_from_file_list(
+        file_list, exons_as_rows, output_filename='temp.txt',
+        max_padj=0.01, min_coverage=2):
+    ivs_by_gene = get_ivs_by_gene(
+        file_list, max_padj=max_padj, min_coverage=min_coverage)
+    print 'ivs by gene'
+    print ivs_by_gene
     clusters_by_gene = get_reproducible_peaks(ivs_by_gene)
+    print 'clusters_by_gene'
+    print clusters_by_gene
     # print clusters_by_gene
     if len(clusters_by_gene) > 0:
         table = cluster_reads.convert_to_table(clusters_by_gene, exons_as_rows)
@@ -150,13 +165,22 @@ def read_as_table_of_lists(fname, use_col='WB ID', use_header_val=None):
 def get_rpkm(
         table, lib,
         counts_fname='counts/combined_counts.txt'):
+    print "Getting RPKM..."
     db = pandas.read_csv(counts_fname, sep='\t', index_col=False)
+    if 'combined_counts.txt' in db.columns:
+        del db['combined_counts.txt']
+
     if ('gene' in db.columns) and ('gene_id' not in db.columns):
         db['gene_id'] = db['gene']
     lens = get_gene_len(db['gene'].tolist(), lib['gtf_one_txpt_per_gene'], use='gene_id')
     lens_as_list = [float(lens[x]) for x in db['gene'].tolist()]
     read_cols = [x for x in db.columns if x[:4] != 'gene']
+    print read_cols
+    print '\n*' * 14
     for col in read_cols:
+        print col
+        print db[col]
+        print db[col].sum()
         total = float(db[col].sum())
         db[col] = [1e6 * float(x)/total for x in db[col].tolist()]
         db[col] = [1e3 * float(x)/max([1, lens_as_list[i]]) for i, x in enumerate(db[col].tolist())]
@@ -169,7 +193,7 @@ read_cols from file {a}: {s}. Top line after conversion from raw reads to rpkm: 
     return full
 
 
-def run(args, lib, gtf, exons_as_rows):
+def run(args, lib, gtf, exons_as_rows, max_padj=0.01, min_num_reps=2):
     bed_files = get_file_list(lib)
     cluster_file_list = []
     for bed_file in bed_files:
@@ -183,13 +207,21 @@ def run(args, lib, gtf, exons_as_rows):
     exp_beds = [x.rstrip('.bed') + '.txt' for x in exp_beds]
     experimentals = [x for x in cluster_file_list if (
         re.search('exp', x) or (os.path.basename(x) in exp_beds))]
+    print experimentals
+    print '*' * 7
     output_filename = lib['permutation_peaks_dir'] + '/combined_exp.txt'
-    table = get_combined_clusters_from_file_list(experimentals, exons_as_rows, output_filename=output_filename)
+    table = get_combined_clusters_from_file_list(
+        experimentals, exons_as_rows, output_filename=output_filename,
+        max_padj=max_padj, min_coverage=min_num_reps)
+    print "409" * 20
+    print table
     verification(table)
     control_beds = set([lib[x] for x in lib if re.match('control_bed.*', x)])
     control_beds = [x.rstrip('.bed') + '.txt' for x in control_beds]
     controls = [x for x in cluster_file_list if (
         re.search('control', x) or (os.path.basename(x) in control_beds))]
     output_filename = lib['permutation_peaks_dir'] + '/combined_control.txt'
-    table = get_combined_clusters_from_file_list(controls, exons_as_rows, output_filename=output_filename)
+    table = get_combined_clusters_from_file_list(
+        controls, exons_as_rows, output_filename=output_filename,
+        max_padj=max_padj, min_coverage=min_num_reps)
     verification(table)
