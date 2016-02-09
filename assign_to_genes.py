@@ -104,6 +104,7 @@ def fill_in_gaps(folder_name, lib):
     known_genes = set()
     for fname in glob.glob(folder_name + '/*'):
         print fname
+        if re.match('combined_.*', os.path.basename(fname)) is not None: continue
         counts[fname] = collections.defaultdict(int)
         with open(fname, 'r') as f:
             for li in f:
@@ -141,7 +142,10 @@ def create_combined_file_of_counts(
     for gene in all:
         li += '%s\t' % gene
         for k in output_order:
-            li += '%s\t' % all[gene][k]
+            if k in all[gene]:
+                li += '%s\t' % all[gene][k]
+            else:
+                li += '0\t'
         li += '\n'
     with open(output_filename, 'w') as f:
         f.write(li)

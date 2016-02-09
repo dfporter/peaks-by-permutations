@@ -23,8 +23,16 @@ def read_args():
     parser.add_argument('-v', '--no_ui',
                         help='No user input.',
                         default=False, action='store_true')
+    parser.add_argument('-s', '--max_padj',
+                    help='Maximum adjusted p value to accept (default 0.01).',
+                    default=0.01,)
+    parser.add_argument('-r', '--min_num_reps',
+            help='Miniumum number of replicates with a cluster (default 2).',
+            default=2,)
 
     args = parser.parse_args()
+    args.max_padj = float(args.max_padj)
+    args.min_num_reps = int(args.min_num_reps)
     return args
 
 
@@ -40,11 +48,15 @@ if __name__ == '__main__':
     #  set(peaks['gene_name'].tolist()). That is, peaks is a dataframe.
     exons_as_rows = p_values_of_clusters.get_exonic_ranges(lib['gtf'])
     if args.no_ui:
-        cluster_combine.run(args, lib, gtf, exons_as_rows)
+        cluster_combine.run(
+            args, lib, gtf, exons_as_rows, max_padj=args.max_padj,
+            min_num_reps=args.min_num_reps)
         sys.exit()
     while True:
         try:
-            cluster_combine.run(args, lib, gtf, exons_as_rows)
+            cluster_combine.run(
+                args, lib, gtf, exons_as_rows, max_padj=args.max_padj,
+                min_num_reps=args.min_num_reps)
             print "Successfully finished."
         except:
             print traceback.format_exc()
