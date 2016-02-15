@@ -16,7 +16,8 @@ def sum_reads_in_gene(full, lib=None):
     if lib is not None:
         beds = set([lib[x] for x in lib if re.match('exp.*', x)])
         exp_counts = [x.rstrip('.bed') + '_counts.txt' for x in beds]
-        beds = set([lib[x] for x in lib if re.match('control.*', x)])
+        beds = set([lib[x] for x in lib if (
+            re.match('control.*', x) or re.match('.*n2.*', x))]
         control_counts = [x.rstrip('.bed') + '_counts.txt' for x in beds]
     else:
         counts = [x for x in full.columns if re.match('.*_counts\.txt', x)]
