@@ -191,17 +191,18 @@ def get_args():
     return args
 
 
-def run(use_this_lib=None, bed=None):
+def run(use_this_lib=None, bed_folder=None):
     if use_this_lib is not None:
         lib = use_this_lib
+        if bed_folder is None: bed_folder = lib['read_beds']
     else:
         args = get_args()
-        bed = args.bed
+        bed_folder = args.bed
         sys.path.insert(0, args.config)
         import config
         lib = config.config()
     features = get_gtf(lib, gtf_file=lib['gtf_raw'])#'./genomes/Saccharomyces_cerevisiae.EF4.70.gtf')
-    map_folder(bed, features)
+    map_folder(bed_folder, features)
     fill_in_gaps('counts', lib)
     create_combined_file_of_counts('counts',
                                    output_filename='combined_counts.txt')

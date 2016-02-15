@@ -65,7 +65,7 @@ def read_as_table_of_lists(fname, use_col='WB ID', use_header_val=None):
     return table
 
 
-def get_sequences(peaks):
+def get_sequences(peaks, lib):
     fasta_filename = lib['fasta']
     # fasta_filename = 'lib/c_elegans.WS235.genomic.fa'
     sequences = dict((re.sub('CHROMOSOME_', '', p.name), p.seq) for p in HTSeq.FastaReader(fasta_filename))
@@ -373,7 +373,7 @@ def add_reads_in_peak_from_bedgraph(peak_df, bedgraph_folder, lib):
     # ]
     if 'chrom' in peak_df.columns and 'chrm' not in peak_df.columns:
         peak_df['chrm'] = peak_df['chrom']
-    gas = read_bedgraph_folder(peak_df, bedgraph_folder)
+    gas = read_bedgraph_folder(peak_df, bedgraph_folder, lib)
     peaks = peak_df.to_dict('records')
     for row in peaks:
         for label in expected:
@@ -388,7 +388,7 @@ def max_depth(ga, iv):
     return np.max(np.fromiter(ga[iv], dtype='i'))
 
 
-def read_bedgraph_folder(peak_df, bedgraph_folder):
+def read_bedgraph_folder(peak_df, bedgraph_folder, lib):
     gas = {}
     # expected = [
     #              'fog_CGGA',  'fog_GGCA',  'fog_GGTT',  'fog_TGGC',
@@ -439,40 +439,22 @@ def gene_name_from_wb_id(clip_df, lib):
     return clip_df
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='''Annotates a peaks file (IN PLACE!).''')
-    parser.add_argument(
-        '-p', '--peaks', default='all_peaks.txt',
-        help='''A list of peaks with counts of reads for each dataset.'''
-    )
-    parser.add_argument(
-        '-r', '--rip', default='lib/fog3_rip.txt',
-        help='''Filename of RIP data.'''
-    )
-    parser.add_argument(
-        '-c', '--config_dir', default='analysis/',
-        help='Directory of config.py file.'
-    )
-    args = parser.parse_args()
-    sys.path.insert(0, args.config_dir)
-    import config
-    lib = config.config()
-    peaks_df = pandas.read_csv(args.peaks, sep='\t')
+def run(lib, peaks_filename):
+    peaks_df = pandas.read_csv(peaks_filename, sep='\t')
     peaks_df = add_reads_in_peak_from_bedgraph(peaks_df, lib['bedgraphs_folder'], lib)
     print peaks_df.head(1)
-    if 'gene_name' not in open(args.peaks, 'r').readline().rstrip('\n').split('\t'):
+    if 'gene_name' not in open(peaks_filename, 'r').readline().rstrip('\n').split('\t'):
         print "Adding a gene_name column..."
         peak_df = add_gene_name(peaks_df, lib)
         print peaks_df.columns
-    peaks_df.to_csv(args.peaks, sep='\t', index=False)
-    if 'gene_id' not in open(args.peaks, 'r').readline().rstrip('\n').split('\t'):
+    peaks_df.to_csv(peaks_filename, sep='\t', index=False)
+    if 'gene_id' not in open(peaks_filename, 'r').readline().rstrip('\n').split('\t'):
         print "Adding a gene ID column..."
-        add_wb_name(clip_by_peak, args.peaks)
+        add_wb_name(clip_by_peak, peaks_filename)
     print "Calculating ratios..."
-    add_ratio_column(input_filename=args.peaks,
+    add_ratio_column(input_filename=peaks_filename,
                      label='n2_ratio', positives_include='fog_')
-    clip = read_as_table_of_lists(args.peaks, use_header_val='gene_id')
+    clip = read_as_table_of_lists(peaks_filename, use_header_val='gene_id')
     if 'fog3_rip_ranks' in lib:
         rip = read_as_table(lib['fog3_rip_ranks'], use_header_val='WB ID')
         print "Peaks %i, ex: %s" % (len(clip.keys()), str(clip.keys()[0]))
@@ -489,7 +471,7 @@ if __name__ == '__main__':
     add_height(clip, positives_include='exp')
     flattened = []
     for gene in clip: flattened.extend(clip[gene])
-    get_sequences(flattened)
+    get_sequences(flattened, lib)
     clip_df = pandas.DataFrame(flattened)
     out_cols = get_cols(clip_df)
     fasta_from_peaks(clip_df, filename='peaks.fa')
@@ -497,9 +479,24 @@ if __name__ == '__main__':
     clip_df = gene_name_from_wb_id(clip_df, lib)
     print clip_df.loc[0]
     clip_df.sort(columns=['height'], inplace=True, ascending=False )
-    clip_df.to_csv(args.peaks,
+    clip_df.to_csv(peaks_filename,
                    # cols=out_cols,
                    sep='\t', index=False)
 
 
-
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='''Annotates a peaks file (IN PLACE!).''')
+    parser.add_argument(
+        '-p', '--peaks', default='all_peaks.txt',
+        help='''A list of peaks with counts of reads for each dataset.'''
+    )
+    parser.add_argument(
+        '-c', '--config_dir', default='analysis/',
+        help='Directory of config.py file.'
+    )
+    args = parser.parse_args()
+    sys.path.insert(0, args.config_dir)
+    import config
+    lib = config.config()
+    run(lib, args.peaks)
