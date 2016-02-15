@@ -94,6 +94,7 @@ def map_bed(bed_filename, features):
             )
     os.system('cp {a} counts/'.format(a=output_filename))
 
+
 def fill_in_gaps(folder_name, lib):
     # if gtf_file is None:
     #     gtf_path = gtf_file

@@ -17,7 +17,7 @@ def sum_reads_in_gene(full, lib=None):
         beds = set([lib[x] for x in lib if re.match('exp.*', x)])
         exp_counts = [x.rstrip('.bed') + '_counts.txt' for x in beds]
         beds = set([lib[x] for x in lib if (
-            re.match('control.*', x) or re.match('.*n2.*', x))]
+            re.match('control.*', x) or re.match('.*n2.*', x))])
         control_counts = [x.rstrip('.bed') + '_counts.txt' for x in beds]
     else:
         counts = [x for x in full.columns if re.match('.*_counts\.txt', x)]
@@ -25,7 +25,7 @@ def sum_reads_in_gene(full, lib=None):
         exp_counts = []
         for x in counts:
             print x
-            if re.match('.*control.*', x):
+            if re.match('.*control.*', x) or re.match('.*n2.*', x):
                 control_counts.append(x)
                 print 'contr'
             else:
@@ -100,5 +100,4 @@ if __name__ == '__main__':
     lib = config.config()
     del sys.path[0]
     run(args, lib)
-    # print table.iloc[0]
 

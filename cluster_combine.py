@@ -122,11 +122,14 @@ def get_gene_len(genes, filename, use='gene_id'):
 #        for li in f:
 #            s = li.rstrip('\n').split('\t')
     lens = {}
+    found, missing = set(), set()
     for gene in genes:
         if gene not in gtf:
             lens[gene] = 1e3
-            print 'Missing ' + gene
+            # print 'Missing ' + gene
+            missing.add(gene)
             continue
+        found.add(gene)
         txpts = set([x['transcript_id'] for x in gtf[gene]]) - set([np.nan]) - set(['.'])
         if len(txpts) > 1:
             print "more than one txpt"
@@ -148,10 +151,12 @@ def get_gene_len(genes, filename, use='gene_id'):
             print this_txpt
             print set([x['transcript_id'] for x in gtf[gene]])
             print [x['2'] for x in gtf[gene]]
+    print "Found {a}/{b} gene ids in {name}. Failed to find {c}.".format(
+        a=len(found), b=len(genes), name=filename, c=len(missing))
     return lens
 
 
-def read_as_table_of_lists(fname, use_col='WB ID', use_header_val=None):
+def read_as_table_of_lists(fname, use_header_val=None):
     if use_header_val is not None:
         _table = collections.defaultdict(list)
         key = use_header_val
@@ -169,18 +174,12 @@ def get_rpkm(
     db = pandas.read_csv(counts_fname, sep='\t', index_col=False)
     if 'combined_counts.txt' in db.columns:
         del db['combined_counts.txt']
-
     if ('gene' in db.columns) and ('gene_id' not in db.columns):
         db['gene_id'] = db['gene']
     lens = get_gene_len(db['gene'].tolist(), lib['gtf_one_txpt_per_gene'], use='gene_id')
     lens_as_list = [float(lens[x]) for x in db['gene'].tolist()]
     read_cols = [x for x in db.columns if x[:4] != 'gene']
-    print read_cols
-    print '\n*' * 14
     for col in read_cols:
-        print col
-        print db[col]
-        print db[col].sum()
         total = float(db[col].sum())
         db[col] = [1e6 * float(x)/total for x in db[col].tolist()]
         db[col] = [1e3 * float(x)/max([1, lens_as_list[i]]) for i, x in enumerate(db[col].tolist())]
