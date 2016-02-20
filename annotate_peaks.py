@@ -248,8 +248,6 @@ def _as_list(df):
     return df_l
 
 
-
-
 def add_gene_name(peak_df, lib):  #, fname='./lib/gtf_with_names_column.txt'):
     fname = lib['gtf']
     gtf = read_as_table(fname, use_col='gene_id')
@@ -260,24 +258,16 @@ def add_gene_name(peak_df, lib):  #, fname='./lib/gtf_with_names_column.txt'):
 
 
 def add_wb_name(
-        peaks, peaks_fname, fname='./lib/gtf_with_id_column.txt'):
+        peaks_fname, fname='./lib/gtf_with_names_column.txt'):
     print "Loading gtf..."
     gtf = read_as_table(fname, use_header_val='gene_name')
     print "...finished loading gtf."
-    for p in peaks:
-        gene = peaks[p]['gene_name']
-        if gene in gtf:
-            gene_id = gtf[gene]['gene_id']
-            peaks[p]['gene_id'] = gene_id
-        else:
-            print 'gene name not in wb gtf: %s' % gene
-            peaks[p]['gene_id'] = '***'
-    peaks_list = []
-    for p in peaks:
-        peaks_list.append(peaks[p])
-    peaks_df = pandas.DataFrame(peaks_list)
-    cols = get_cols(peaks_list)
-    peaks_df.to_csv(peaks_fname, cols=cols, sep='\t', index=False)
+    peaks_df = pandas.read_csv(peaks_fname, sep='\t')
+    def name_to_id(name, gtf):
+        if name in gtf: return gtf[name]['gene_id']
+        else: return '***'
+    peaks_df['gene_id'] = [name_to_id(x, gtf) for x in peaks_df['gene_name'].tolist()]
+    peaks_df.to_csv(peaks_fname, sep='\t', index=False)
 
 
 def fasta_from_peaks(peaks, filename='peaks.fa'):
@@ -361,7 +351,7 @@ def get_file_list(lib):
         else:
             found_all = True
         try_num += 1
-    print file_list
+    print "get_file_list(lib): %s" % str(file_list)
     return file_list
 
 
@@ -390,15 +380,20 @@ def max_depth(ga, iv):
 
 def read_bedgraph_folder(peak_df, bedgraph_folder, lib):
     gas = {}
+    print bedgraph_folder
+    print os.system('ls %s' % bedgraph_folder)
     # expected = [
     #              'fog_CGGA',  'fog_GGCA',  'fog_GGTT',  'fog_TGGC',
     #      'control_AATA',  'control_CCGG',  'control_TTAA', 'control_TTGT',
     # ]
     expected = [x.rstrip('.bed') for x in get_file_list(lib)]
+    print expected
     for fname in glob.glob(bedgraph_folder + '/*_+.wig'):
+        print "Found %s" % fname
         bname = os.path.basename(fname).partition('_+.wig')[0]
         if bname not in expected:
-            print "Unexpected file: {a}".format(a=bname)
+            print "Unexpected file: |{a}| Expected {aa}".format(a=bname,
+                                                    aa=expected)
             continue
         gas[bname] = read_bedgraph(fname, '+')
     for fname in glob.glob(bedgraph_folder + '/*_-.wig'):
@@ -448,12 +443,12 @@ def run(lib, peaks_filename):
         peak_df = add_gene_name(peaks_df, lib)
         print peaks_df.columns
     peaks_df.to_csv(peaks_filename, sep='\t', index=False)
-    if 'gene_id' not in open(peaks_filename, 'r').readline().rstrip('\n').split('\t'):
+    if 'gene_id' not in open(peaks_filename).readline().rstrip('\n').split('\t'):
         print "Adding a gene ID column..."
-        add_wb_name(clip_by_peak, peaks_filename)
+        add_wb_name(peaks_filename)
     print "Calculating ratios..."
     add_ratio_column(input_filename=peaks_filename,
-                     label='n2_ratio', positives_include='fog_')
+                     label='n2_ratio', positives_include='fog')
     clip = read_as_table_of_lists(peaks_filename, use_header_val='gene_id')
     if 'fog3_rip_ranks' in lib:
         rip = read_as_table(lib['fog3_rip_ranks'], use_header_val='WB ID')
