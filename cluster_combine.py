@@ -176,6 +176,9 @@ def get_rpkm(
         del db['combined_counts.txt']
     if ('gene' in db.columns) and ('gene_id' not in db.columns):
         db['gene_id'] = db['gene']
+    db['keep'] = [bool(re.search('WBGene', x)) for x in db['gene_id']]
+    db = db[db['keep']]
+    del db['keep']
     lens = get_gene_len(db['gene'].tolist(), lib['gtf_one_txpt_per_gene'], use='gene_id')
     lens_as_list = [float(lens[x]) for x in db['gene'].tolist()]
     read_cols = [x for x in db.columns if x[:4] != 'gene']
