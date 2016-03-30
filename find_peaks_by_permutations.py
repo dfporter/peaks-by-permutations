@@ -48,33 +48,30 @@ import p_values_of_clusters
 import cluster_combine
 import filter_by_reads_per_gene
 from get_bed_files import get_bed_files, read_a_bed_file
+import config
+
 
 def read_args():
     parser = argparse.ArgumentParser(description='''
         Determine the locations of features in genes across the genome.''')
-    parser.add_argument('-c', '--config_dir',
+    parser.add_argument('-c', '--config_ini',
                         default='config/',
-                        help='''Directory holding a config.py file.''')
+                        help='''config.ini file.''')
     parser.add_argument('-v', '--no_ui',
                         help='No user input.',
                         default=False, action='store_true')
     parser.add_argument('-t', '--filter_by_counts',
-                        help='(Optional) Filter the output using read count values supplied by'\
-                             ' the file passed to this argument. Default: False',
+                        help='''
+(Optional) Filter the output using read count values supplied by
+ the file passed to this argument. Default: False''',
                         default='')
     args = parser.parse_args()
     return args
 
 
-
-
 if __name__ == '__main__':
     args = read_args()
-    print args
-    sys.path.insert(0, args.config_dir)
-    import config
-    lib = config.config()
-    del sys.path[0]
+    lib = config.config(args.config_ini)
     if not os.path.exists('logs/'): os.system('mkdir logs')
     if not os.path.exists('figs/'): os.system('mkdir figs')
     logging.basicConfig(

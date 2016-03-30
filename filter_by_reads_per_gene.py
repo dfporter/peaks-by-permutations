@@ -1,4 +1,5 @@
 import cluster_combine
+import config
 
 import pandas
 import HTSeq
@@ -50,9 +51,9 @@ def apply_cutoff(full, ratio_cutoff=10, min_reads_cutoff=200,
 def read_args():
     parser = argparse.ArgumentParser(description='''
         Convert cluster tables to peaks files by comparing replicates/p values.''')
-    parser.add_argument('-c', '--config_dir',
-                        default='config/',
-                        help='''Directory holding a config.py file.''')
+    parser.add_argument('-c', '--config_ini',
+                        default='config.ini',
+                        help='''config.ini file.''')
     parser.add_argument('-i', '--peaks',
                         help='Peaks file.')
     parser.add_argument('-t', '--counts',
@@ -95,9 +96,6 @@ def run(args, lib):
 
 if __name__ == '__main__':
     args = read_args()
-    sys.path.insert(0, args.config_dir)
-    import config
-    lib = config.config()
-    del sys.path[0]
+    lib = config.config(args.config_ini)
     run(args, lib)
 

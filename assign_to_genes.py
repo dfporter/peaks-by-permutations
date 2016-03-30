@@ -7,7 +7,7 @@ import collections
 import glob
 import time
 import collections
-
+import config
 
 
 # Following:
@@ -187,7 +187,7 @@ def set_of_all_gene_names_in_folder(folder_name):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--bed', help="""Folder of bed files.""")
-    parser.add_argument('-c', '--config', help="""Folder of config.py.""")
+    parser.add_argument('-c', '--config_ini', help="""config.ini file.""")
     args = parser.parse_args()
     return args
 
@@ -199,9 +199,7 @@ def run(use_this_lib=None, bed_folder=None):
     else:
         args = get_args()
         bed_folder = args.bed
-        sys.path.insert(0, args.config)
-        import config
-        lib = config.config()
+        lib = config.config(args.config_ini)
     features = get_gtf(lib, gtf_file=lib['gtf_raw'])#'./genomes/Saccharomyces_cerevisiae.EF4.70.gtf')
     map_folder(bed_folder, features)
     fill_in_gaps('counts', lib)

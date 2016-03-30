@@ -1,8 +1,10 @@
 import re
 import argparse
 import sys
-
+import config
 import collections
+
+
 def add_wb_name_to_gtf(lib):
     fname = lib['gtf_raw']
     gtf = {}
@@ -73,11 +75,9 @@ if __name__ == '__main__':
         description='''Converts a raw gtf file into a table with \
         a header and gene_id and biotype columns.''')
     parser.add_argument(
-        '-c', '--config_dir', default='analysis/',
-        help='Directory of config.py file.'
+        '-c', '--config_ini', default='config.ini',
+        hel'config.ini file.'
     )
     args = parser.parse_args()
-    sys.path.insert(0, args.config_dir)
-    import config
-    lib = config.config()
+    lib = config.config(args.config_ini)
     add_wb_name_to_gtf(lib)

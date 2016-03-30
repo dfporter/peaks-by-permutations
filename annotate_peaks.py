@@ -8,7 +8,7 @@ import collections
 import numpy as np
 import glob
 import os
-
+import config
 
 def read_as_table(fname, use_col='WB ID', use_header_val=None):
     if use_header_val is not None:
@@ -487,11 +487,9 @@ if __name__ == '__main__':
         help='''A list of peaks with counts of reads for each dataset.'''
     )
     parser.add_argument(
-        '-c', '--config_dir', default='analysis/',
-        help='Directory of config.py file.'
+        '-c', '--config_ini', default='analysis/',
+        help='config.ini file.'
     )
     args = parser.parse_args()
-    sys.path.insert(0, args.config_dir)
-    import config
-    lib = config.config()
+    lib = config.config(args.config_ini)
     run(lib, args.peaks)

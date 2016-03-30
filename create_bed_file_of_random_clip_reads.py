@@ -15,17 +15,14 @@ import p_values_of_clusters
 import cluster_combine
 import traceback
 import assign_to_genes
-
+import config
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config_dir',
+    parser.add_argument('-c', '--config_ini',
                         help="""Directory holding config.py""")
     args = parser.parse_args()
-    sys.path.insert(0, args.config_dir)
-    import config
-    lib = config.config()
-    del sys.path[0]
+    lib = config.config(args.config_ini)
     gtf = HTSeq.GFF_Reader(lib['gtf_raw'], end_included=True)
     ga, reads_by_gene, counts_by_gene = find_peaks_by_permutations.get_bed_files(
         bed_folder=lib['read_beds'], gtf=gtf,

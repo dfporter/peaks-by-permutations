@@ -13,13 +13,15 @@ import glob
 import cluster_reads
 import p_values_of_clusters
 import cluster_combine
+import config
+
 
 def read_args():
     parser = argparse.ArgumentParser(description='''
         Convert cluster tables to peaks files by comparing replicates/p values.''')
-    parser.add_argument('-c', '--config_dir',
-                        default='config/',
-                        help='''Directory holding a config.py file.''')
+    parser.add_argument('-c', '--config_ini',
+                        default='config.ini',
+                        help='''config.ini file.''')
     parser.add_argument('-v', '--no_ui',
                         help='No user input.',
                         default=False, action='store_true')
@@ -29,7 +31,6 @@ def read_args():
     parser.add_argument('-r', '--min_num_reps',
             help='Miniumum number of replicates with a cluster (default 2).',
             default=2,)
-
     args = parser.parse_args()
     args.max_padj = float(args.max_padj)
     args.min_num_reps = int(args.min_num_reps)
@@ -38,11 +39,7 @@ def read_args():
 
 if __name__ == '__main__':
     args = read_args()
-    print args
-    sys.path.insert(0, args.config_dir)
-    import config
-    lib = config.config()
-    del sys.path[0]
+    lib = config.config(args.config_ini)
     gtf = HTSeq.GFF_Reader(lib['gtf_raw'], end_included=True)
     # get_txpts() uses the peaks argument to select what txpts to load by a call to
     #  set(peaks['gene_name'].tolist()). That is, peaks is a dataframe.
