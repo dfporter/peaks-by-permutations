@@ -1,6 +1,7 @@
 import HTSeq
 import collections
 import re
+import cluster_reads
 import time
 import os
 
@@ -16,6 +17,8 @@ def get_bed_files(bed_folder='beds/', gtf=None, args=None, lib=None):
     bed_file_list = [
         "/".join([bed_folder, x]) for x in control_names + exp_names
     ]
+    print "get_bed_files:"
+    print bed_file_list
     reads_by_gene = {}
     counts_by_gene = {}
     ga = {}

@@ -4,9 +4,7 @@ import os
 
 def config(filepath='config.ini'):
     Config = ConfigParser.ConfigParser()
-    src_dir = os.path.dirname(os.path.realpath(__file__))
-    print "src_dir for config.py is {a}".format(a=src_dir)
-    Config.read(src_dir + "/config.ini")
+    Config.read(filepath)
     lib = ConfigSectionMap('library', Config)
     return lib
 

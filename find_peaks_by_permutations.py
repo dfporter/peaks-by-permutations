@@ -80,6 +80,7 @@ if __name__ == '__main__':
     logging.info('Module called %s' % str(time.localtime()))
     logger = logging.getLogger(__name__)
     # Load raw reads.
+    print lib['read_beds']
     gtf = HTSeq.GFF_Reader(lib['gtf_raw'], end_included=True)
     ga, reads_by_gene, counts_by_gene = get_bed_files(
         bed_folder=lib['read_beds'], gtf=gtf,
@@ -94,7 +95,7 @@ if __name__ == '__main__':
             args.counts = args.filter_by_counts
             args.peaks = 'permutation_peaks/combined_exp.txt'
             os.system('python annotate_peaks.py -c {a} -p permutation_peaks/combined_exp.txt'.format(
-                a=args.config_dir))
+                a=args.config_ini))
             filter_by_reads_per_gene.run(args, lib)
         print "Successfully finished."
         sys.exit()
@@ -105,7 +106,7 @@ if __name__ == '__main__':
                 lib=lib, args=args)
             cluster_combine.run(args, lib, gtf, exons_as_rows)
             os.system('python annotate_peaks.py -c {a} -p permutation_peaks/combined_exp.txt'.format(
-                a=args.config_dir))
+                a=args.config_ini))
             if args.filter_by_counts != '':
                 import filter_by_reads_per_gene
                 args.counts = args.filter_by_counts
