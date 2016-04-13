@@ -10,6 +10,8 @@ import glob
 import os
 import config
 
+
+
 def read_as_table(fname, use_col='WB ID', use_header_val=None):
     if use_header_val is not None:
         _table = {}
@@ -297,7 +299,7 @@ def get_cols(clip_list):
          'fog_CGGA',  'fog_GGCA',  'fog_GGTT',  'fog_TGGC',
          'control_AATA',  'control_CCGG',  'control_TTAA', 'control_TTGT',
          'fbf1n2_acaa', 'fbf1n2_ccgg', 'fbf1n2_tgcc', 'fbf2n2_acaa',
-         'fbf2n2_ccgg', 'fbf2n2_tgcc']
+         'fbf2n2_ccgg', 'fbf2n2_tgcc', 'max_coverage']
     for name in extras:
         if name in obs_cols:
             out_cols.append(name)
